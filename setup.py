@@ -9,5 +9,5 @@ setup(
     author='Marcus Hughes',
     author_email='hughes.jmb@gmail.com',
     description='Package to retrieve GOES solar data',
-    install_requires=["pandas", "bs4"]
+    install_requires=["pandas", "bs4", "numpy"]
 )

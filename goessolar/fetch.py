@@ -4,7 +4,9 @@ import urllib.request
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from goessolar.kinds import Satellite, Product
-from typing import Optional, List, Union, Iterable
+from typing import Optional, List, Iterable
+import numpy as np
+import os
 
 ROOT_URL = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes"
 
@@ -75,20 +77,20 @@ def date_range(start, end) -> List[datetime]:
     return [start + timedelta(days=i) for i in range(delta.days + 1)]
 
 
-class Catalog:
+class Retriever:
     def __init__(self):
         self.catalog = {satellite: {product: None for product in Product} for satellite in Satellite}
         self.coverage = {satellite: {product: CoverageSet() for product in Product} for satellite in Satellite}
 
     @staticmethod
-    def load(cls, path: str) -> Catalog:
+    def load(cls, path: str) -> Retriever:
         pass
 
     def save(self, path: str) -> None:
         pass
 
     @staticmethod
-    def _format_url(cls, satellite: Satellite, product: Product, date: datetime) -> str:
+    def _format_url(satellite: Satellite, product: Product, date: datetime) -> str:
         satellite_str = str.lower(str(satellite).split(".")[1])
         product_str = str(product).split(".")[1].replace("_", "-")
         level = product_str.split("-")[1]
@@ -96,7 +98,7 @@ class Catalog:
         return "/".join([ROOT_URL, satellite_str, level, "data", product_str, date_str])
 
     @staticmethod
-    def _fetch_page(cls, url: str) -> pd.DataFrame:
+    def _fetch_page(url: str) -> pd.DataFrame:
         with urllib.request.urlopen(url) as response:
             html = response.read()
         soup = BeautifulSoup(html, 'html.parser')
@@ -104,25 +106,46 @@ class Catalog:
         def split_entry(entry):
             contents = entry.find_all("td")
             file_name = contents[0].text
-            date_begin = "None"
-            date_edited = contents[1].text
+            date_edited = datetime.strptime(contents[1].text, '%Y-%m-%d %H:%M   ')
+            date_begin = date_edited  # TODO: actually extract this from the filename
             file_size = contents[2].text
             return {'file_name': file_name, 'date_begin': date_begin,
-                    'date_edited': date_edited, 'file_size': file_size}
+                    'date_edited': date_edited, 'file_size': file_size, 'url': url + file_name}
 
         entries = soup.find_all('tr')[3:][:-1]
         results = list(map(split_entry, entries))
         df = pd.DataFrame(results)
         return df
 
-    def fetch(self, directory: str, satellite: Union[Satellite, Iterable[Satellite]],
-              product: Union[Product, Iterable[Product]],
-              start: datetime, end: Optional[datetime] = None, count: int = 1) -> None:
+    def fetch(self, directory: str, satellite: Iterable[Satellite], product: Iterable[Product],
+              start: datetime, end: Optional[datetime] = None, count: int = 1, spaced: bool = False) -> None:
         if end is None:
             end = datetime(start.year, start.month, start.day, 23, 59, 59)
+        for s in satellite:
+            for p in product:
+                self._fetch(directory, s, p, start, end, count=count, spaced=spaced)
 
     def _fetch(self, directory: str, satellite: Satellite, product: Product,
-               start: datetime, end: datetime, count: int = 1) -> None:
+               start: datetime, end: datetime, count: int = 1, spaced: bool = False) -> None:
+
+        # Make sure the catalog covers the required interval
         if not self.coverage[satellite][product].covers(start, end):
-            dates = date_range((start, end))
-            self._fetch_page()
+            dates = date_range(start, end)
+            frames = map(lambda date: Retriever._fetch_page(Retriever._format_url(satellite, product, date)), dates)
+            self.catalog[satellite][product] = pd.concat([self.catalog[satellite][product],
+                                                          *frames]).drop_duplicates().reset_index(drop=True)
+
+        # Select the required number of examples
+        table = self.catalog[satellite][product]
+        mask = (table['date_begin'] >= start) & (table['date_begin'] <= end)
+        if spaced:
+            selected = table[mask]['url'].values
+            idx = np.round(np.linspace(0, len(selected) - 1, count)).astype(int)
+            selected = selected[idx]
+        else:  # get the nearest examples
+            selected = table[mask]['url'].values[:count]
+
+        # Download the examples
+        for url in selected:
+            urllib.request.urlretrieve(url, os.path.join(directory, url.split("/")[-1]))
+

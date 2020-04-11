@@ -16,3 +16,6 @@ r = Retriever()
 results = r.search(satellite, product, start, end)
 r.retrieve(results[::100], "/home/marcus/Desktop/imgs/")
 ``` 
+
+## TODO:
+* Provide full support for products other than SUVI. 

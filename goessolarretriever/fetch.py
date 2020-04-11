@@ -135,4 +135,7 @@ class Retriever:
 
     def retrieve(self, results: pd.DataFrame, save_directory: str):
         for _, row in tqdm(results.iterrows()):
-            urllib.request.urlretrieve(row['url'], os.path.join(save_directory, row['file_name']))
+            try:
+                urllib.request.urlretrieve(row['url'], os.path.join(save_directory, row['file_name']))
+            except ValueError:
+                pass

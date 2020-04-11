@@ -9,7 +9,6 @@ class Satellite(Enum):
 
 @unique
 class Product(Enum):
-    exis_l1b_sfxr = auto()
     mag_l1b_geof = auto()
     seis_l1b_ehis = auto()
     seis_l1b_mpsh = auto()
@@ -20,8 +19,6 @@ class Product(Enum):
     suvi_l1b_fe171 = auto()
     suvi_l1b_fe195 = auto()
     suvi_l1b_fe284 = auto()
-    suvi_l1b_fe93 = auto()
-    suvi_l1b_he303 = auto()
     suvi_l1b_he304 = auto()
     magn_l2_avg1m = auto()
     magn_l2_hires = auto()

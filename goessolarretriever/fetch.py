@@ -29,6 +29,13 @@ class NameParser:
                Product.suvi_l2_ci284,
                Product.suvi_l2_ci304}
 
+    suvi_lib = {Product.suvi_l1b_fe094,
+                Product.suvi_l1b_fe131,
+                Product.suvi_l1b_fe171,
+                Product.suvi_l1b_fe195,
+                Product.suvi_l1b_fe284,
+                Product.suvi_l1b_he304}
+
     def __init__(self, satellite: Satellite, product: Product):
         self.satellite = satellite
         self.product = product
@@ -41,6 +48,8 @@ class NameParser:
         """
         if self.product in NameParser.suvi_ci:
             return NameParser._get_dates_suvi_ci(name)
+        elif self.product in NameParser.suvi_lib:
+            return NameParser._get_dates_suvi_l1b(name)
         else:
             return None, None
 
@@ -54,6 +63,18 @@ class NameParser:
         _, product_str, satellite_str, start_str, end_str, _ = name.split("_")
         start = datetime.strptime(start_str, "s%Y%m%dT%H%M%SZ")
         end = datetime.strptime(end_str, "e%Y%m%dT%H%M%SZ")
+        return start, end
+
+    @staticmethod
+    def _get_dates_suvi_l1b(name: str):
+        """
+        Filename parser for Suvi Composite Image data
+        :param name: filename
+        :return: start and end date
+        """
+        _, product_str, satellite_str, start_str, end_str, _ = name.split("_")
+        start = datetime.strptime(start_str[:-1], "s%Y%j%H%M%S")
+        end = datetime.strptime(end_str[:-1], "e%Y%j%H%M%S")
         return start, end
 
 
@@ -78,26 +99,29 @@ class Retriever:
 
     @staticmethod
     def _fetch_page(url: str, parser: NameParser) -> pd.DataFrame:
-        with urllib.request.urlopen(url) as response:
-            html = response.read()
-        soup = BeautifulSoup(html, 'html.parser')
+        try:
+            with urllib.request.urlopen(url) as response:
+                html = response.read()
+            soup = BeautifulSoup(html, 'html.parser')
 
-        def split_entry(entry):
-            contents = entry.find_all("td")
-            file_name = contents[0].text
-            date_edited = datetime.strptime(contents[1].text, '%Y-%m-%d %H:%M   ')
-            date_begin, date_end = parser.get_dates(file_name)
-            file_size = contents[2].text
-            return {'file_name': file_name, 'date_begin': date_begin, 'date_end': date_end,
-                    'date_edited': date_edited, 'file_size': file_size, 'url': url + file_name}
+            def split_entry(entry):
+                contents = entry.find_all("td")
+                file_name = contents[0].text
+                date_edited = datetime.strptime(contents[1].text, '%Y-%m-%d %H:%M   ')
+                date_begin, date_end = parser.get_dates(file_name)
+                file_size = contents[2].text
+                return {'file_name': file_name, 'date_begin': date_begin, 'date_end': date_end,
+                        'date_edited': date_edited, 'file_size': file_size, 'url': url + file_name}
 
-        entries = soup.find_all('tr')[3:][:-1]
-        results = list(map(split_entry, entries))
-        df = pd.DataFrame(results)
+            entries = soup.find_all('tr')[3:][:-1]
+            results = list(map(split_entry, entries))
+            df = pd.DataFrame(results)
+        except urllib.request.HTTPError:
+            df = pd.DataFrame()
         return df
 
     def search(self, satellite: Satellite, product: Product,
-              start: datetime, end: Optional[datetime] = None) -> None:
+               start: datetime, end: Optional[datetime] = None) -> None:
         if end is None:
             end = datetime(start.year, start.month, start.day, 23, 59, 59)
 

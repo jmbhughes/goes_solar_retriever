@@ -7,6 +7,8 @@ from goessolarretriever.kinds import Satellite, Product
 from typing import Optional, List, Iterable
 from tqdm import tqdm
 import os
+import numpy as np
+
 
 ROOT_URL = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes"
 
@@ -121,7 +123,7 @@ class Retriever:
         return df
 
     def search(self, satellite: Satellite, product: Product,
-               start: datetime, end: Optional[datetime] = None) -> None:
+               start: datetime, end: Optional[datetime] = None) -> pd.DataFrame:
         if end is None:
             end = datetime(start.year, start.month, start.day, 23, 59, 59)
 
@@ -139,3 +141,9 @@ class Retriever:
                 urllib.request.urlretrieve(row['url'], os.path.join(save_directory, row['file_name']))
             except ValueError:
                 pass
+
+    def retrieve_nearest(self, satellite: Satellite, product: Product, date: datetime, save_directory: str) -> str:
+        df = self.search(satellite, product, date)
+        best_index = np.argmin(np.abs(df['date_begin'] - date))
+        self.retrieve(df.iloc[[best_index]], save_directory)
+        return os.path.join(save_directory, df.iloc[best_index]['file_name'])

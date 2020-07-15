@@ -144,6 +144,9 @@ class Retriever:
 
     def retrieve_nearest(self, satellite: Satellite, product: Product, date: datetime, save_directory: str) -> str:
         df = self.search(satellite, product, date)
-        best_index = np.argmin(np.abs(df['date_begin'] - date))
+        try:
+            best_index = np.argmin(np.abs(df['date_begin'] - date))
+        except KeyError:
+            raise RuntimeError("Data does not exist for the time {}".format(date))
         self.retrieve(df.iloc[[best_index]], save_directory)
         return os.path.join(save_directory, df.iloc[best_index]['file_name'])

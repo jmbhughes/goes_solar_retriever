@@ -3,6 +3,9 @@
 The solar data from the GOES satellite is stored in an [FTP server](https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/).
 This tool allows for easy retrieval of the data in Python. 
 
+## Install
+```pip install goes-solar-retriever ```
+
 ## Example
 ```python 
 from goessolarretriever import Retriever, Satellite, Product

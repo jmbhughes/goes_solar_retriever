@@ -1,4 +1,3 @@
-from __future__ import annotations
 import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
@@ -13,10 +12,10 @@ import numpy as np
 ROOT_URL = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes"
 
 
-def date_range(start, end) -> List[datetime]:
+def date_range(start, end):
     # Truncate the hours, minutes, and seconds
-    sdate: datetime = datetime(start.year, start.month, start.day)
-    edate: datetime = datetime(end.year, end.month, end.day)
+    sdate = datetime(start.year, start.month, start.day)
+    edate = datetime(end.year, end.month, end.day)
 
     # compute all dates in that difference
     delta: timedelta = edate - sdate
@@ -42,7 +41,7 @@ class NameParser:
         self.satellite = satellite
         self.product = product
 
-    def get_dates(self, name: str):
+    def get_dates(self, name):
         """
         Overall method to get the date and time from a filename string
         :param name: filename extracted from web page
@@ -56,7 +55,7 @@ class NameParser:
             return None, None
 
     @staticmethod
-    def _get_dates_suvi_ci(name: str):
+    def _get_dates_suvi_ci(name):
         """
         Filename parser for Suvi Composite Image data
         :param name: filename
@@ -68,7 +67,7 @@ class NameParser:
         return start, end
 
     @staticmethod
-    def _get_dates_suvi_l1b(name: str):
+    def _get_dates_suvi_l1b(name):
         """
         Filename parser for Suvi Composite Image data
         :param name: filename
@@ -85,10 +84,10 @@ class Retriever:
         pass
 
     @staticmethod
-    def load(cls, path: str) -> Retriever:
+    def load(cls, path):
         pass
 
-    def save(self, path: str) -> None:
+    def save(self, path) -> None:
         pass
 
     @staticmethod
@@ -100,7 +99,7 @@ class Retriever:
         return "/".join([ROOT_URL, satellite_str, level, "data", product_str, date_str])
 
     @staticmethod
-    def _fetch_page(url: str, parser: NameParser) -> pd.DataFrame:
+    def _fetch_page(url: str, parser):
         try:
             with urllib.request.urlopen(url) as response:
                 html = response.read()
@@ -122,8 +121,8 @@ class Retriever:
             df = pd.DataFrame()
         return df
 
-    def search(self, satellite: Satellite, product: Product,
-               start: datetime, end: Optional[datetime] = None) -> pd.DataFrame:
+    def search(self, satellite: Satellite, product,
+               start, end=None):
         if end is None:
             end = datetime(start.year, start.month, start.day, 23, 59, 59)
 
@@ -135,14 +134,14 @@ class Retriever:
             results = pd.concat([results, page], ignore_index=True)
         return results
 
-    def retrieve(self, results: pd.DataFrame, save_directory: str):
+    def retrieve(self, results, save_directory):
         for _, row in tqdm(results.iterrows()):
             try:
                 urllib.request.urlretrieve(row['url'], os.path.join(save_directory, row['file_name']))
             except ValueError:
                 pass
 
-    def retrieve_nearest(self, satellite: Satellite, product: Product, date: datetime, save_directory: str) -> str:
+    def retrieve_nearest(self, satellite, product, date, save_directory):
         df = self.search(satellite, product, date)
         try:
             best_index = np.argmin(np.abs(df['date_begin'] - date))

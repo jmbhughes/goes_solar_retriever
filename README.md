@@ -1,6 +1,6 @@
 # GOES Solar Retriever
 
-The solar data from the GOES satellite is stored in an [FTP server](https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/).
+The solar data from the GOES satellite is stored on an [FTP server](https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/).
 This tool allows for easy retrieval of the data in Python. 
 
 ## Install
@@ -27,22 +27,26 @@ filename = r.retrieve_nearest(satellite, product, time, "/home/marcus/Desktop/im
 ``` 
 
 ## Satellites included:
-* Satellite.GOES16
-* Satellite.GOES17
+* GOES 16: `Satellite.GOES16`
+* GOES 17: `Satellite.GOES17`
 
 ## Products included:
-* 94 angstrom composite: Product.suvi_l2_ci094,
-* 134 angstrom composite: Product.suvi_l2_ci134
-* 171 angstrom composite: Product.suvi_l2_ci171,
-* 195 angstrom composite: Product.suvi_l2_ci195,
-* 284 angstrom composite: Product.suvi_l2_ci284,
-* 304 angstrom composite: Product.suvi_l2_ci304
-* 94 ansgstrom L1b: Product.suvi_l1b_fe094,
-* 131 angstrom L1b: Product.suvi_l1b_fe131,
-* 171 angstrom L1b: Product.suvi_l1b_fe171,
-* 195 angstrom L1b: Product.suvi_l1b_fe195,
-* 284 angstrom L1b: Product.suvi_l1b_fe284,
-* 304 angstrom L1b: Product.suvi_l1b_he304
+* 94 angstrom composite: `Product.suvi_l2_ci094`
+* 134 angstrom composite: `Product.suvi_l2_ci134`
+* 171 angstrom composite: `Product.suvi_l2_ci171`
+* 195 angstrom composite: `Product.suvi_l2_ci195`
+* 284 angstrom composite: `Product.suvi_l2_ci284`
+* 304 angstrom composite: `Product.suvi_l2_ci304`
+* 94 ansgstrom L1b: `Product.suvi_l1b_fe094`
+* 131 angstrom L1b: `Product.suvi_l1b_fe131`
+* 171 angstrom L1b: `Product.suvi_l1b_fe171`
+* 195 angstrom L1b: `Product.suvi_l1b_fe195`
+* 284 angstrom L1b: `Product.suvi_l1b_fe284`
+* 304 angstrom L1b: `Product.suvi_l1b_he304`
+* SUVI thematic maps: `Product.suvi_l2_thmap`
 
 ## TODO:
 * Provide full support for products other than SUVI. 
+* Add documentation
+* Create tests
+* Make a progress bar show up when searching

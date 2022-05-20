@@ -30,3 +30,4 @@ class Product(Enum):
     suvi_l2_ci195 = auto()
     suvi_l2_ci284 = auto()
     suvi_l2_ci304 = auto()
+    suvi_l2_thmap = auto()

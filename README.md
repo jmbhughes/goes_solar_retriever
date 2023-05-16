@@ -32,7 +32,7 @@ filename = r.retrieve_nearest(satellite, product, time, "/home/marcus/Desktop/im
 
 ## Products included:
 * 94 angstrom composite: `Product.suvi_l2_ci094`
-* 134 angstrom composite: `Product.suvi_l2_ci134`
+* 131 angstrom composite: `Product.suvi_l2_ci131`
 * 171 angstrom composite: `Product.suvi_l2_ci171`
 * 195 angstrom composite: `Product.suvi_l2_ci195`
 * 284 angstrom composite: `Product.suvi_l2_ci284`
